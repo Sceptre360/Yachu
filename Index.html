@@ -1,1 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🥬 Cabbage Markets — Solar System Quotation Builder</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#0a0e14;
+    --panel:#111826;
+    --panel-2:#161f30;
+    --line:#233047;
+    --text:#e6edf3;
+    --muted:#7c8aa3;
+    --green:#4fd67a;
+    --green-dim:#245b3a;
+    --yellow:#f2c744;
+    --yellow-bg:#3a3418;
+    --red:#ef6a6a;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(circle at 15% 0%, #0e1a14 0%, transparent 40%),
+      var(--bg);
+    color:var(--text);
+    font-family:'JetBrains Mono', monospace;
+    padding:28px 16px 60px;
+  }
+  .wrap{max-width:1000px;margin:0 auto;}
 
+  header{margin-bottom:28px;}
+  .brand{
+    display:flex;align-items:center;gap:10px;
+    color:var(--green);font-size:13px;letter-spacing:.12em;text-transform:uppercase;
+    margin-bottom:6px;
+  }
+  .brand::before{content:"🥬";font-size:16px;}
+  h1{
+    font-size:26px;margin:0 0 6px;font-weight:800;letter-spacing:-0.01em;
+  }
+  .sub{color:var(--muted);font-size:13px;line-height:1.6;max-width:640px;}
+
+  .grid3{
+    display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:22px;
+  }
+  @media(max-width:820px){.grid3{grid-template-columns:1fr;}}
+
+  .card{
+    background:var(--panel);
+    border:1px solid var(--line);
+    border-radius:10px;
+    padding:16px 16px 18px;
+  }
+  .card.active{border-color:var(--green);box-shadow:0 0 0 1px var(--green) inset;}
+  .card h3{
+    margin:0 0 3px;font-size:13px;letter-spacing:.08em;text-transform:uppercase;color:var(--green);
+  }
+  .card .hint{color:var(--muted);font-size:11px;margin-bottom:12px;line-height:1.5;}
+
+  label{
+    display:block;font-size:11px;color:var(--muted);margin:10px 0 4px;text-transform:uppercase;letter-spacing:.05em;
+  }
+  label:first-of-type{margin-top:0;}
+  input[type=number], select{
+    width:100%;background:var(--bg);border:1px solid var(--line);color:var(--text);
+    padding:9px 10px;border-radius:6px;font-family:inherit;font-size:14px;
+  }
+  input[type=number]:focus, select:focus{outline:none;border-color:var(--green);}
+
+  .radio-row{
+    display:flex;align-items:center;gap:8px;background:var(--bg);
+    border:1px solid var(--line);border-radius:6px;padding:9px 10px;margin-bottom:8px;cursor:pointer;
+  }
+  .radio-row input{accent-color:var(--green);}
+  .radio-row.checked{border-color:var(--green);background:var(--green-dim);}
+  .radio-row span{font-size:12.5px;}
+
+  .toggle-row{display:flex;align-items:center;gap:8px;margin-top:14px;font-size:12px;color:var(--muted);}
+  .toggle-row input{accent-color:var(--green);}
+
+  button.calc{
+    width:100%;margin-top:22px;padding:14px;border:none;border-radius:8px;
+    background:var(--green);color:#08130c;font-weight:800;font-size:14px;
+    letter-spacing:.04em;text-transform:uppercase;cursor:pointer;font-family:inherit;
+  }
+  button.calc:hover{filter:brightness(1.08);}
+
+  .readout{
+    margin-top:22px;display:grid;grid-template-columns:repeat(3,1fr);gap:14px;
+  }
+  @media(max-width:820px){.readout{grid-template-columns:1fr;}}
+  .stat{
+    background:var(--panel-2);border:1px solid var(--line);border-radius:10px;
+    padding:14px 16px;text-align:center;
+  }
+  .stat .val{font-size:22px;font-weight:800;color:var(--green);}
+  .stat .lbl{font-size:10.5px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-top:4px;}
+
+  table{width:100%;border-collapse:collapse;margin-top:26px;font-size:12.5px;}
+  thead th{
+    background:var(--green-dim);color:var(--green);text-transform:uppercase;letter-spacing:.04em;
+    font-size:11px;padding:10px 8px;border:1px solid var(--line);text-align:left;
+  }
+  tbody td{padding:9px 8px;border:1px solid var(--line);vertical-align:top;}
+  tbody tr:nth-child(even){background:#0d1420;}
+  tbody tr.highlight td{background:var(--yellow-bg);}
+  tbody tr.optional td{opacity:.45;}
+  td.no{color:var(--muted);width:26px;}
+  td.model{color:var(--muted);}
+  td.qty{font-weight:700;color:var(--green);width:70px;}
+  td.formula{color:var(--muted);font-size:11px;width:210px;}
+  tfoot td{
+    padding:12px 8px;border:1px solid var(--line);font-weight:800;
+    background:var(--panel-2);
+  }
+
+  details{margin-top:26px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;}
+  summary{cursor:pointer;color:var(--green);font-size:12px;text-transform:uppercase;letter-spacing:.06em;}
+  .coeff-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px 16px;margin-top:14px;}
+  @media(max-width:600px){.coeff-grid{grid-template-columns:1fr;}}
+  .coeff-grid label{margin:0 0 3px;}
+  .coeff-note{font-size:11px;color:var(--muted);margin-top:14px;line-height:1.6;}
+
+  footer{margin-top:34px;text-align:center;color:var(--muted);font-size:11px;letter-spacing:.05em;}
+  footer .tag{color:var(--green);}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="brand">Cabbage Markets · Sceptre360</div>
+    <h1>Solar &amp; Lithium System Quotation Builder</h1>
+    <div class="sub">Battery, inverter and panel count are linked. Pick the one spec the customer already knows, fill it in, and the rest of the system — plus the full bill of quantities — is worked out from it.</div>
+  </header>
+
+  <!-- DRIVER SELECTION -->
+  <div class="card" style="margin-top:18px;">
+    <h3>What does the customer know?</h3>
+    <div class="hint">Choose the anchor spec. The other two sections grey out and get calculated.</div>
+    <label class="radio-row checked" id="row-inverter">
+      <input type="radio" name="driver" value="inverter" checked> <span><b>Inverter size (kVA)</b> — recommend battery + panel count</span>
+    </label>
+    <label class="radio-row" id="row-battery">
+      <input type="radio" name="driver" value="battery"> <span><b>Battery (Voltage × Ah)</b> — recommend inverter + panel count</span>
+    </label>
+    <label class="radio-row" id="row-panel">
+      <input type="radio" name="driver" value="panel"> <span><b>Panels (wattage × qty)</b> — recommend inverter + battery</span>
+    </label>
+  </div>
+
+  <div class="grid3">
+    <div class="card" id="card-battery">
+      <h3>🔋 Battery</h3>
+      <div class="hint">LiFePO4 bank</div>
+      <label>Voltage (V)</label>
+      <input type="number" id="battV" value="51.2" step="0.1">
+      <label>Capacity (Ah)</label>
+      <input type="number" id="battAh" value="100">
+      <label>No. of battery units</label>
+      <input type="number" id="battQty" value="1" min="1">
+    </div>
+
+    <div class="card" id="card-inverter">
+      <h3>⚡ Inverter</h3>
+      <div class="hint">Hybrid inverter</div>
+      <label>Size (kVA)</label>
+      <input type="number" id="invKVA" value="6.2" step="0.1">
+      <div class="toggle-row">
+        <input type="checkbox" id="gridTie">
+        <label style="margin:0;text-transform:none;letter-spacing:0;">Also connecting to AC/grid (adds change-over switch + VA breaker)</label>
+      </div>
+    </div>
+
+    <div class="card" id="card-panel">
+      <h3>☀️ Solar Panels</h3>
+      <div class="hint">Mono bi-facial</div>
+      <label>Panel wattage (W)</label>
+      <input type="number" id="panelW" value="610">
+      <label>No. of panels</label>
+      <input type="number" id="panelQty" value="6" min="1">
+    </div>
+  </div>
+
+  <button class="calc" onclick="calculate()">Generate quotation</button>
+
+  <div class="readout" id="readout"></div>
+
+  <table id="quoteTable">
+    <thead>
+      <tr><th>No</th><th>Product</th><th>Model</th><th>Basis / formula</th><th>Qty</th></tr>
+    </thead>
+    <tbody id="quoteBody"></tbody>
+    <tfoot><tr><td colspan="4">System total</td><td id="sysTotal"></td></tr></tfoot>
+  </table>
+
+  <details>
+    <summary>Advanced — tune the formulas</summary>
+    <div class="coeff-grid">
+      <div>
+        <label>Inverter kVA per battery kWh</label>
+        <input type="number" id="cInvPerBatt" value="1.21" step="0.01">
+      </div>
+      <div>
+        <label>Panel watts as % of inverter watts</label>
+        <input type="number" id="cPanelPerInv" value="0.59" step="0.01">
+      </div>
+      <div>
+        <label>PV cable (6mm) — metres per panel</label>
+        <input type="number" id="cPvCable" value="8.33" step="0.01">
+      </div>
+      <div>
+        <label>AC cable (6mm) — metres per inverter kW</label>
+        <input type="number" id="cAcCable" value="2.42" step="0.01">
+      </div>
+      <div>
+        <label>Panels per rail segment</label>
+        <input type="number" id="cPanelsPerSeg" value="4" step="1">
+      </div>
+      <div>
+        <label>Battery cables (35mm) per battery unit</label>
+        <input type="number" id="cCablePerBatt" value="4" step="1">
+      </div>
+    </div>
+    <div class="coeff-note">
+      These ratios are seeded from the 5.12kWh + 6.2kW + 6×610W reference quotation. Rails work out to 2 per segment, end clamps to 4 per segment, and mid clamps to 2 per gap between panels in a segment — adjust "panels per rail segment" to match the rail lengths you actually stock. Update any figure here as real installs give you better data, then re-generate.
+    </div>
+  </details>
+
+  <footer>🥬 CABBAGE MARKETS &nbsp;·&nbsp; <span class="tag">Sceptre360</span> &nbsp;·&nbsp; internal quotation tool, prices excluded by design</footer>
+</div>
+
+<script>
+const rows = {inverter:'row-inverter', battery:'row-battery', panel:'row-panel'};
+document.querySelectorAll('input[name=driver]').forEach(r=>{
+  r.addEventListener('change', updateDriverUI);
+});
+
+function updateDriverUI(){
+  const driver = document.querySelector('input[name=driver]:checked').value;
+  Object.values(rows).forEach(id=>document.getElementById(id).classList.remove('checked'));
+  document.getElementById(rows[driver]).classList.add('checked');
+
+  document.getElementById('card-battery').classList.toggle('active', driver==='battery');
+  document.getElementById('card-inverter').classList.toggle('active', driver==='inverter');
+  document.getElementById('card-panel').classList.toggle('active', driver==='panel');
+
+  // grey out the fields that will be computed rather than typed
+  document.getElementById('invKVA').disabled = (driver!=='inverter');
+  document.getElementById('battAh').disabled = (driver!=='battery');
+  document.getElementById('battV').disabled = (driver!=='battery');
+  document.getElementById('battQty').disabled = (driver!=='battery');
+  document.getElementById('panelQty').disabled = (driver!=='panel');
+}
+updateDriverUI();
+
+function ceil(n){return Math.ceil(n);}
+function round1(n){return Math.round(n*10)/10;}
+
+function calculate(){
+  const driver = document.querySelector('input[name=driver]:checked').value;
+  const gridTie = document.getElementById('gridTie').checked;
+
+  const cInvPerBatt   = parseFloat(document.getElementById('cInvPerBatt').value) || 1.21;
+  const cPanelPerInv  = parseFloat(document.getElementById('cPanelPerInv').value) || 0.59;
+  const cPvCable      = parseFloat(document.getElementById('cPvCable').value) || 8.33;
+  const cAcCable      = parseFloat(document.getElementById('cAcCable').value) || 2.42;
+  const cPanelsPerSeg = parseInt(document.getElementById('cPanelsPerSeg').value) || 4;
+  const cCablePerBatt = parseInt(document.getElementById('cCablePerBatt').value) || 4;
+
+  let battV = parseFloat(document.getElementById('battV').value) || 51.2;
+  let battAh = parseFloat(document.getElementById('battAh').value) || 100;
+  let battQty = parseInt(document.getElementById('battQty').value) || 1;
+  let invKVA = parseFloat(document.getElementById('invKVA').value) || 0;
+  let panelW = parseFloat(document.getElementById('panelW').value) || 610;
+  let panelQty = parseInt(document.getElementById('panelQty').value) || 0;
+
+  let totalBattKWh, totalPanelW;
+
+  if(driver==='inverter'){
+    totalBattKWh = invKVA / cInvPerBatt;
+    totalPanelW = invKVA * 1000 * cPanelPerInv;
+    panelQty = ceil(totalPanelW / panelW);
+    const perUnitKWh = (battV*battAh)/1000;
+    battQty = Math.max(1, ceil(totalBattKWh/perUnitKWh));
+    document.getElementById('battQty').value = battQty;
+    document.getElementById('panelQty').value = panelQty;
+  } else if(driver==='battery'){
+    totalBattKWh = (battV*battAh*battQty)/1000;
+    invKVA = round1(totalBattKWh * cInvPerBatt);
+    totalPanelW = invKVA * 1000 * cPanelPerInv;
+    panelQty = ceil(totalPanelW / panelW);
+    document.getElementById('invKVA').value = invKVA;
+    document.getElementById('panelQty').value = panelQty;
+  } else { // panel driven
+    totalPanelW = panelW * panelQty;
+    invKVA = round1(totalPanelW / (1000*cPanelPerInv));
+    totalBattKWh = invKVA / cInvPerBatt;
+    const perUnitKWh = (battV*battAh)/1000;
+    battQty = Math.max(1, ceil(totalBattKWh/perUnitKWh));
+    document.getElementById('invKVA').value = invKVA;
+    document.getElementById('battQty').value = battQty;
+  }
+
+  // re-read final values after cross-fill
+  battV = parseFloat(document.getElementById('battV').value);
+  battAh = parseFloat(document.getElementById('battAh').value);
+  battQty = parseInt(document.getElementById('battQty').value);
+  invKVA = parseFloat(document.getElementById('invKVA').value);
+  panelQty = parseInt(document.getElementById('panelQty').value);
+  const finalBattKWh = round1((battV*battAh*battQty)/1000);
+
+  // racking formulas
+  const segments = ceil(panelQty / cPanelsPerSeg);
+  const rails = segments * 2;
+  const endClamps = segments * 4;
+  let midClamps = 0;
+  let remaining = panelQty;
+  for(let s=0; s<segments; s++){
+    const inSeg = Math.min(cPanelsPerSeg, remaining);
+    midClamps += Math.max(0, inSeg-1) * 2;
+    remaining -= inSeg;
+  }
+
+  const pvCableM = ceil(panelQty * cPvCable);
+  const acCableM = ceil(invKVA * cAcCable);
+  const dcBreakers = battQty;
+  const batteryMCCB = battQty;
+  const batteryCables = battQty * cCablePerBatt;
+
+  // readout
+  document.getElementById('readout').innerHTML = `
+    <div class="stat"><div class="val">${finalBattKWh} kWh</div><div class="lbl">Battery bank (${battQty}× ${battV}V ${battAh}Ah)</div></div>
+    <div class="stat"><div class="val">${invKVA} kVA</div><div class="lbl">Inverter recommended</div></div>
+    <div class="stat"><div class="val">${panelQty} panels</div><div class="lbl">${panelW}W each · ${(panelQty*panelW)} W array</div></div>
+  `;
+
+  const items = [
+    ['5.12kWh-class LiFePO4 Battery', `${battV}V / ${battAh}Ah`, 'System kWh ÷ per-unit kWh', battQty, false],
+    ['Hybrid Inverter', `${invKVA} kVA`, 'Battery kWh × '+cInvPerBatt, 1, false],
+    ['Solar Panel, mono bi-facial', `${panelW}W`, 'Inverter W × '+cPanelPerInv+' ÷ panel W', panelQty, false],
+    ['PV Cable', '6mm', cPvCable+' m per panel', pvCableM+' m', false],
+    ['DC Breaker', '63A', '1 per battery unit', dcBreakers, false],
+    ['Mounting Rail', '', '2 per rail segment ('+cPanelsPerSeg+' panels/segment)', rails, true],
+    ['End Clamp', '', '4 per rail segment', endClamps, true],
+    ['Mid Clamp', '', '2 per gap between panels in a segment', midClamps, true],
+    ['End Closure', '', '1 per rail segment', segments, true],
+    ['AC Cable', '6mm', cAcCable+' m per inverter kW', acCableM+' m', false],
+    ['Battery MCCB', '', '1 per battery unit', batteryMCCB, false],
+    ['Sundries', '', 'Fixed lump sum', 1, true],
+    ['Change-over switch, auto, w/ end closure', '63A, AC-tied', 'Only if grid/AC connected', gridTie?1:0, false],
+    ['VA Breaker', '63A', 'Only if grid/AC connected', gridTie?1:0, false],
+    ['Battery Cable', '35mm', cCablePerBatt+' per battery unit', batteryCables, false],
+    ['Installation Fee', '', 'Fixed, per install', 1, false],
+    ['Transport Fee', '', 'Fixed, per install', 1, false],
+  ];
+
+  const body = document.getElementById('quoteBody');
+  body.innerHTML = '';
+  let no=1;
+  items.forEach(([name, model, formula, qty, hl])=>{
+    if((name.includes('Change-over') || name.includes('VA Breaker')) && qty===0){
+      const tr = document.createElement('tr');
+      tr.className = 'optional';
+      tr.innerHTML = `<td class="no">${no}</td><td>${name}</td><td class="model">${model}</td><td class="formula">${formula}</td><td class="qty">—</td>`;
+      body.appendChild(tr); no++; return;
+    }
+    const tr = document.createElement('tr');
+    if(hl) tr.className='highlight';
+    tr.innerHTML = `<td class="no">${no}</td><td>${name}</td><td class="model">${model}</td><td class="formula">${formula}</td><td class="qty">${qty}</td>`;
+    body.appendChild(tr);
+    no++;
+  });
+
+  document.getElementById('sysTotal').innerText = `${no-1} line items`;
+}
+
+calculate();
+</script>
+</body>
+</html>
